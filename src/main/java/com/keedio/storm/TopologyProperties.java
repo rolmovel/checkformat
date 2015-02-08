@@ -15,7 +15,9 @@ public class TopologyProperties {
 	private Config stormConfig;
 	private String zookeeperHosts;
 	private String stormExecutionMode;
-	
+	private boolean kafkaStartFromBeginning;
+
+
 	public TopologyProperties(String fileName){
 		
 		stormConfig = new Config();
@@ -41,6 +43,7 @@ public class TopologyProperties {
 		topologyName = properties.getProperty("storm.topology.name","topologyName");
 		localTimeExecution = Integer.parseInt(properties.getProperty("storm.local.execution.time","20000"));
 		kafkaTopic = properties.getProperty("kafka.topic");
+		kafkaStartFromBeginning = new Boolean(properties.getProperty("kafka.startFromBeginning"));
 		setStormConfig(properties);
 	}
 
@@ -64,9 +67,9 @@ public class TopologyProperties {
 		stormConfig.put(Config.NIMBUS_THRIFT_PORT, Integer.parseInt(nimbusPort));
 		stormConfig.put(Config.STORM_ZOOKEEPER_PORT, parseZkPort(zookeeperHosts));
 		stormConfig.put(Config.STORM_ZOOKEEPER_SERVERS, parseZkHosts(zookeeperHosts));
-		// Splunk connection properties
-		stormConfig.put("splunk.host", properties.getProperty("splunk.host"));
-		stormConfig.put("splunk.port", properties.getProperty("splunk.port"));
+		// TCP bolt connection properties
+		stormConfig.put("tcp.bolt.host", properties.getProperty("tcp.bolt.host"));
+		stormConfig.put("tcp.bolt.port", properties.getProperty("tcp.bolt.port"));
 	}
 
 	private static int parseZkPort(String zkNodes) 
@@ -109,5 +112,9 @@ public class TopologyProperties {
 	
 	public String getStormExecutionMode() {
 		return stormExecutionMode;
+	}	
+	
+	public boolean isKafkaStartFromBeginning() {
+		return kafkaStartFromBeginning;
 	}	
 }

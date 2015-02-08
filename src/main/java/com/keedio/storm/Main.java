@@ -7,7 +7,7 @@ public class Main {
 		String propertiesFile = args[0];
 		System.out.println(propertiesFile);
 		TopologyProperties topologyProperties = new TopologyProperties(propertiesFile);
-		SiemUKTopology topology = new SiemUKTopology(topologyProperties);
+		StormSplunkTCPTopology topology = new StormSplunkTCPTopology(topologyProperties);
 		topology.runTopology();
 	}
 }
