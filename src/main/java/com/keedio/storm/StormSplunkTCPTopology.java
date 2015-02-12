@@ -50,9 +50,21 @@ public class StormSplunkTCPTopology {
 		SpoutConfig kafkaConfig = new SpoutConfig(kafkaBrokerHosts, topologyProperties.getKafkaTopic(), "/storm/kafka",	kafkaTopic);
 		kafkaConfig.forceFromStart = topologyProperties.isKafkaStartFromBeginning();
 		
+		// NOTE: This is for avoid a bug in kafka storm config default value
+
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout("KafkaSpout", new KafkaSpout(kafkaConfig), 1);
-		builder.setBolt("SplunkTCPBolt", new TCPBolt(), 1).shuffleGrouping("KafkaSpout");
+		builder.setSpout("KafkaSpout", new KafkaSpout(kafkaConfig), 4);
+		builder.setBolt("FilterBolt", new FilterMessageBolt(),1).shuffleGrouping("KafkaSpout");
+		builder.setBolt("SplunkTCPBolt", new TCPBolt(), 1).shuffleGrouping("FilterBolt");
+
 		return builder.createTopology();
+	}
+	
+	public static void main(String[] args) throws Exception {
+		String propertiesFile = args[0];
+		System.out.println(propertiesFile);
+		TopologyProperties topologyProperties = new TopologyProperties(propertiesFile);
+		StormSplunkTCPTopology topology = new StormSplunkTCPTopology(topologyProperties);
+		topology.runTopology();
 	}
 }

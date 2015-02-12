@@ -67,6 +67,9 @@ public class TopologyProperties {
 		stormConfig.put(Config.NIMBUS_THRIFT_PORT, Integer.parseInt(nimbusPort));
 		stormConfig.put(Config.STORM_ZOOKEEPER_PORT, parseZkPort(zookeeperHosts));
 		stormConfig.put(Config.STORM_ZOOKEEPER_SERVERS, parseZkHosts(zookeeperHosts));
+		// Filter Messages Bolt properties
+		stormConfig.put("filter.bolt.allow", properties.getProperty("filter.bolt.allow",""));
+		stormConfig.put("filter.bolt.deny", properties.getProperty("filter.bolt.deny",""));
 		// TCP bolt connection properties
 		stormConfig.put("tcp.bolt.host", properties.getProperty("tcp.bolt.host"));
 		stormConfig.put("tcp.bolt.port", properties.getProperty("tcp.bolt.port"));
