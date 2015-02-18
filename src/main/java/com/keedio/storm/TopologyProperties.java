@@ -1,11 +1,13 @@
 package com.keedio.storm;
 
+import backtype.storm.Config;
+import backtype.storm.metric.LoggingMetricsConsumer;
+import com.keedio.storm.metric.JMXMetricConsumer;
+
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import backtype.storm.Config;
 
 public class TopologyProperties {
 	
@@ -73,6 +75,10 @@ public class TopologyProperties {
 		// TCP bolt connection properties
 		stormConfig.put("tcp.bolt.host", properties.getProperty("tcp.bolt.host"));
 		stormConfig.put("tcp.bolt.port", properties.getProperty("tcp.bolt.port"));
+
+        // register metric consumer
+        stormConfig.registerMetricsConsumer(JMXMetricConsumer.class, 1);
+        stormConfig.registerMetricsConsumer(LoggingMetricsConsumer.class, 1);
 	}
 
 	private static int parseZkPort(String zkNodes) 

@@ -7,13 +7,13 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Map;
 
+import backtype.storm.metric.api.*;
+import com.keedio.storm.metric.ThroughputReducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.BasicOutputCollector;
-import backtype.storm.topology.IBasicBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
@@ -30,6 +30,8 @@ public class TCPBolt extends BaseRichBolt {
 	private String host;
 	private int port;
 	private OutputCollector collector;
+    private transient ReducedMetric throughputMetric;
+    private transient CountMetric errorCount;
 	
 	@Override
 	public void cleanup() {
@@ -45,6 +47,10 @@ public class TCPBolt extends BaseRichBolt {
 		loadBoltProperties(stormConf);
 		connectToHost();
 		this.collector = collector;
+        this.throughputMetric = new ReducedMetric(new ThroughputReducer());
+        this.errorCount = new CountMetric();
+        context.registerMetric("throughputMetric", throughputMetric, 5);
+        context.registerMetric("errorCountMetric", errorCount, 5);
 	}
 
 	@Override
@@ -60,10 +66,13 @@ public class TCPBolt extends BaseRichBolt {
 		try {
 			output.writeBytes(input.getString(0) + "\n");
             collector.ack(input);
-		} catch (SocketException se){
+            throughputMetric.update(System.currentTimeMillis());
+        } catch (SocketException se){
+            errorCount.incr();
 			LOG.error("Connection with server lost");
 			connectToHost();
 		} catch (IOException e) {
+            errorCount.incr();
 			e.printStackTrace();
 		}
 	}
