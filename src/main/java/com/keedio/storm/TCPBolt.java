@@ -58,14 +58,13 @@ public class TCPBolt extends BaseRichBolt {
 
 	public void execute(Tuple input) {
 		try {
-			output.writeBytes(input.getString(0) + "\n");		
+			output.writeBytes(input.getString(0) + "\n");
+            collector.ack(input);
 		} catch (SocketException se){
 			LOG.error("Connection with server lost");
 			connectToHost();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally{
-			collector.ack(input);
 		}
 	}
 	
