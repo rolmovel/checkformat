@@ -7,7 +7,7 @@ import backtype.storm.metric.api.IReducer;
  */
 class ThroughputReducerState {
     public double last_update_time = 0;
-    public long start_time = System.currentTimeMillis();
+
 }
 
 /**
@@ -17,6 +17,7 @@ class ThroughputReducerState {
  */
 public class ThroughputReducer implements IReducer<ThroughputReducerState> {
     public long counter = 0;
+    public long start_time = System.currentTimeMillis();
 
     @Override
     public ThroughputReducerState init() {
@@ -42,8 +43,8 @@ public class ThroughputReducer implements IReducer<ThroughputReducerState> {
      */
     @Override
     public Object extractResult(ThroughputReducerState acc) {
-        if (acc.last_update_time > acc.start_time) {
-            return new Double(counter / ((acc.last_update_time - acc.start_time) / 1000));
+        if (acc.last_update_time > start_time) {
+            return new Double(counter / ((acc.last_update_time - start_time) / 1000));
         }
 
         return 0;
