@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,7 @@ import backtype.storm.tuple.Tuple;
 import static backtype.storm.utils.Utils.tuple;
 
 public class FilterMessageBolt implements IBasicBolt {
-	
+
 	public static final Logger LOG = LoggerFactory
 			.getLogger(FilterMessageBolt.class);
 
