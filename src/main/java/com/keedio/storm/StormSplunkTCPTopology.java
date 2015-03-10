@@ -47,7 +47,7 @@ public class StormSplunkTCPTopology {
 	{
 		BrokerHosts kafkaBrokerHosts = new ZkHosts(topologyProperties.getZookeeperHosts());
 		String kafkaTopic = topologyProperties.getKafkaTopic();
-		SpoutConfig kafkaConfig = new SpoutConfig(kafkaBrokerHosts, topologyProperties.getKafkaTopic(), "/storm/kafka",	kafkaTopic);
+		SpoutConfig kafkaConfig = new SpoutConfig(kafkaBrokerHosts, kafkaTopic, "/storm/kafka",	kafkaTopic);
 		kafkaConfig.forceFromStart = topologyProperties.isKafkaStartFromBeginning();
 		
 		// NOTE: This is for avoid a bug in kafka storm config default value
