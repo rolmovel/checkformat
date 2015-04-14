@@ -7,19 +7,12 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Date;
 import java.util.Map;
-
-import backtype.storm.metric.api.*;
-
 import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
-import com.github.staslev.storm.metrics.yammer.YammerFacadeMetric;
-import com.keedio.storm.metric.ThroughputReducer;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Histogram;
 import com.yammer.metrics.core.MetricsRegistry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
