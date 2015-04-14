@@ -5,10 +5,18 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
 import java.util.Map;
 
 import backtype.storm.metric.api.*;
+
+import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
+import com.github.staslev.storm.metrics.yammer.YammerFacadeMetric;
 import com.keedio.storm.metric.ThroughputReducer;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Histogram;
+import com.yammer.metrics.core.MetricsRegistry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +38,30 @@ public class TCPBolt extends BaseRichBolt {
 	private String host;
 	private int port;
 	private OutputCollector collector;
-    private transient ReducedMetric throughputMetric;
-    private transient CountMetric errorCount;
+    private Date lastExecution = new Date();
+    
+    // Declaramos el adaptador y las metricas de yammer
+    private StormYammerMetricsAdapter yammerAdapter;
+	private Counter errors;
+    private Histogram throughput;
 	
+    public Counter getErrors() {
+		return errors;
+	}
+
+	public void setErrors(Counter errors) {
+		this.errors = errors;
+	}
+
+	public Histogram getThroughput() {
+		return throughput;
+	}
+
+	public void setThroughput(Histogram throughput) {
+		this.throughput = throughput;
+	}
+
+
 	@Override
 	public void cleanup() {
 		try {
@@ -47,10 +76,13 @@ public class TCPBolt extends BaseRichBolt {
 		loadBoltProperties(stormConf);
 		connectToHost();
 		this.collector = collector;
-        this.throughputMetric = new ReducedMetric(new ThroughputReducer());
-        this.errorCount = new CountMetric();
-        context.registerMetric("throughputMetric", throughputMetric, 5);
-        context.registerMetric("errorCountMetric", errorCount, 5);
+        
+		// Tiempo de notificacion de metricas en los diferentes bolts
+        stormConf.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 10);
+        
+        yammerAdapter = StormYammerMetricsAdapter.configure(stormConf, context, new MetricsRegistry());
+        errors = yammerAdapter.createCounter("error", "");
+        throughput = yammerAdapter.createHistogram("throughput", "", false);
 	}
 
 	@Override
@@ -66,13 +98,21 @@ public class TCPBolt extends BaseRichBolt {
 		try {
 			output.writeBytes(input.getString(0) + "\n");
             collector.ack(input);
-            throughputMetric.update(System.currentTimeMillis());
-        } catch (SocketException se){
-            errorCount.incr();
+
+            // Añadimos al throughput e inicializamos el date
+            Date actualDate = new Date();
+            long aux = (actualDate.getTime() - lastExecution.getTime())/1000;
+            lastExecution = actualDate;
+            
+            // Registramos para calculo de throughput
+            throughput.update(aux);
+            
+		} catch (SocketException se){
+            errors.inc();
 			LOG.error("Connection with server lost");
 			connectToHost();
 		} catch (IOException e) {
-            errorCount.incr();
+            errors.inc();
 			e.printStackTrace();
 		}
 	}
