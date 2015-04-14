@@ -109,9 +109,13 @@ public class TCPBolt extends BaseRichBolt {
             
 		} catch (SocketException se){
             errors.inc();
+            collector.reportError(se);
+            collector.fail(input);
 			LOG.error("Connection with server lost");
 			connectToHost();
 		} catch (IOException e) {
+			collector.reportError(e);
+			collector.fail(input);
             errors.inc();
 			e.printStackTrace();
 		}
@@ -145,7 +149,7 @@ public class TCPBolt extends BaseRichBolt {
 				LOG.warn("Error establising TCP connection with host: "+host+" port: "+port);
 				try{			
 					Thread.sleep(retryDelay*1000);
-					if (retryDelay < 120)
+					if (retryDelay < 60)
 							retryDelay*=2;
 					continue;
 				}
