@@ -78,7 +78,7 @@ public class TCPBolt extends BaseRichBolt {
 		this.collector = collector;
         
 		// Tiempo de notificacion de metricas en los diferentes bolts
-        stormConf.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 10);
+        //stormConf.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 10);
         
         yammerAdapter = StormYammerMetricsAdapter.configure(stormConf, context, new MetricsRegistry());
         errors = yammerAdapter.createCounter("error", "");
@@ -96,7 +96,7 @@ public class TCPBolt extends BaseRichBolt {
 
 	public void execute(Tuple input) {
 		try {
-			output.writeBytes(input.getString(0) + "\n");
+			output.writeBytes(input.getBinary(0) + "\n");
             collector.ack(input);
 
             // Añadimos al throughput e inicializamos el date

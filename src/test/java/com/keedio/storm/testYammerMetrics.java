@@ -32,6 +32,7 @@ public class testYammerMetrics {
 		Config conf = new Config();
 		conf.put("tcp.bolt.host", "localhost");
 		conf.put("tcp.bolt.port", "8888");
+		conf.put("metrics.reporter.yammer.facade..metric.bucket.seconds", 10);
 		bolt.prepare(conf, topologyContext, collector);
 	}
 
