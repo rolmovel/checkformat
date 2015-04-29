@@ -1,18 +1,27 @@
-package com.keedio.storm;
+package com.keedio.storm.bolt;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.Histogram;
 import com.yammer.metrics.core.MetricsRegistry;
+import com.yammer.metrics.reporting.JmxReporter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -21,6 +30,9 @@ import backtype.storm.tuple.Tuple;
 
 public class TCPBolt extends BaseRichBolt {
 
+	private static final Pattern hostnamePattern =
+			    Pattern.compile("^[a-zA-Z0-9][a-zA-Z0-9-]*(\\.([a-zA-Z0-9][a-zA-Z0-9-]*))*$");
+	  
 	private static final long serialVersionUID = 8831211985061474513L;
 
 	public static final Logger LOG = LoggerFactory
@@ -34,26 +46,10 @@ public class TCPBolt extends BaseRichBolt {
     private Date lastExecution = new Date();
     
     // Declaramos el adaptador y las metricas de yammer
-    private StormYammerMetricsAdapter yammerAdapter;
-	private Counter errors;
-    private Histogram throughput;
+    private MetricRegistry metric;
+    private Meter meter;
+    private com.codahale.metrics.Histogram histogram;
 	
-    public Counter getErrors() {
-		return errors;
-	}
-
-	public void setErrors(Counter errors) {
-		this.errors = errors;
-	}
-
-	public Histogram getThroughput() {
-		return throughput;
-	}
-
-	public void setThroughput(Histogram throughput) {
-		this.throughput = throughput;
-	}
-
 
 	@Override
 	public void cleanup() {
@@ -73,9 +69,12 @@ public class TCPBolt extends BaseRichBolt {
 		// Tiempo de notificacion de metricas en los diferentes bolts
         //stormConf.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 10);
         
-        yammerAdapter = StormYammerMetricsAdapter.configure(stormConf, context, new MetricsRegistry());
-        errors = yammerAdapter.createCounter("error", "");
-        throughput = yammerAdapter.createHistogram("throughput", "", false);
+        metric = new MetricRegistry();
+        meter = metric.meter("meter");
+        histogram = metric.histogram("histogram");
+        
+        com.codahale.metrics.JmxReporter reporter = com.codahale.metrics.JmxReporter.forRegistry(metric).inDomain(metricsPath()).build();
+        reporter.start();
 	}
 
 	@Override
@@ -98,10 +97,9 @@ public class TCPBolt extends BaseRichBolt {
             lastExecution = actualDate;
             
             // Registramos para calculo de throughput
-            throughput.update(aux);
-            
+            histogram.update(aux);
 		} catch (SocketException se){
-            errors.inc();
+            meter.mark();
             collector.reportError(se);
             collector.fail(input);
 			LOG.error("Connection with server lost");
@@ -109,7 +107,7 @@ public class TCPBolt extends BaseRichBolt {
 		} catch (IOException e) {
 			collector.reportError(e);
 			collector.fail(input);
-            errors.inc();
+            meter.mark();
 			e.printStackTrace();
 		}
 	}
@@ -155,5 +153,37 @@ public class TCPBolt extends BaseRichBolt {
 			}
 		}
 	}
+	
+	private String metricsPath() {
+	    final String myHostname = extractHostnameFromFQHN(detectHostname());
+	    return myHostname;
+	}
+
+	  private static String detectHostname() {
+		    String hostname = "hostname-could-not-be-detected";
+		    try {
+		      hostname = InetAddress.getLocalHost().getHostName();
+		    }
+		    catch (UnknownHostException e) {
+		      LOG.error("Could not determine hostname");
+		    }
+		    return hostname;
+		  }
+
+		  private static String extractHostnameFromFQHN(String fqhn) {
+		    if (hostnamePattern.matcher(fqhn).matches()) {
+		      if (fqhn.contains(".")) {
+		        return fqhn.split("\\.")[0];
+		      }
+		      else {
+		        return fqhn;
+		      }
+		    }
+		    else {
+		      // We want to return the input as-is
+		      // when it is not a valid hostname/FQHN.
+		      return fqhn;
+		    }
+		  }
 		
 }
