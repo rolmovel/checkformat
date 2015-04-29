@@ -1,4 +1,4 @@
-package com.keedio.storm;
+package com.keedio.storm.bolt;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
