@@ -10,18 +10,10 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.reporting.JmxReporter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
