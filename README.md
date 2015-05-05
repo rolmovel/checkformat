@@ -1,27 +1,8 @@
-#storm-tcp-bolt
-##Description
+### Check format
 
-This bolt receives a byte array writes the bytes to the configured host and port. It is used in order to inject data to Splunk.
+Ejecutar con:
 
-
-## Property file configuration
-```
-...
-# Splunk tcp properties
-tcp.bolt.host=tcpHost
-tcp.bolt.port=2000
-...
-```
-
-|property|mandatory|description
-|--------|------------|-------------|
-|tcp.bolt.host|true|Splunk host|
-|tcp.bolt.port|true|Splunk port|
-
-
-## Compilation
-Use maven
 ````
-mvn clean package
-```
+java -jar target/checkformat-0.0.1-SNAPSHOT.jar regex message
+````
 
